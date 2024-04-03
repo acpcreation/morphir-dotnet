@@ -64,6 +64,6 @@ jobs:
          curl --location 'https://sonatype-download.global.ssl.fastly.net/repository/downloads-prod-group/scanner/nexus-iq-cli-1.174.0-01+761-windows.zip' > Sonatype.zip
          tar -xf Sonatype.zip
          dir
-         rm -rf Sonatype.zip
+         rm Sonatype.zip
          dir
          nexus-iq-cli.exe -s https://iq.aplattel.ngrok.io/ -a admin:admin!23 -t release -D fileExcludes='nexus-iq-cli.exe' -i morphir-dotnet .
