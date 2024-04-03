@@ -66,4 +66,4 @@ jobs:
          dir
          rm Sonatype.zip
          dir
-         nexus-iq-cli.exe -s https://iq.aplattel.ngrok.io/ -a admin:admin!23 -t release -D fileExcludes='nexus-iq-cli.exe' -i morphir-dotnet .
+         .\nexus-iq-cli.exe -s https://iq.aplattel.ngrok.io/ -a admin:admin!23 -t release -D fileExcludes='nexus-iq-cli.exe' -i morphir-dotnet .
