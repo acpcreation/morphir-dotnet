@@ -39,7 +39,7 @@ jobs:
 
     - name: Resolve Paket Dependencies
       run: |
-        dotnet tool install Paket
+        dotnet tool install --global Paket
         dotnet tool restore
         paket install
         .\build.cmd DotnetRestore
