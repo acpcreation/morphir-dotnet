@@ -10,9 +10,9 @@ jobs:
 
   build:
 
-    strategy:
-      matrix:
-        configuration: [Debug] #Release
+    # strategy:
+    #   matrix:
+    #     configuration: [Debug] #Release
 
     runs-on: windows-latest  # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
@@ -21,9 +21,9 @@ jobs:
       Solution_Name: Sonatype-SCA                         # Replace with your solution name, i.e. MyWpfApp.sln.
       SBOM_Path: SonatypeSCA
       SonatypeUrl: 'https://finos.sonatype.app/platform/'
-      SonatypeAppId: 'morphir-elm'
+      SonatypeAppId: 'morphir-dotnet'
       SonatypeStage: 'build'
-      SonatypeScanTarget: "redistributable/SpringBoot/pom.xml package-lock.json"
+      SonatypeScanTarget: "."
       ExcludeDirectory: " -D dirExcludes='**/website/, **/docs/, **/.*'"
       
     steps:
@@ -71,4 +71,4 @@ jobs:
          dir
          rm Sonatype.zip
          dir
-         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} .
+         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
