@@ -1,4 +1,4 @@
-name: Morphir .NET
+name: Sonatype Lifecycle SCA Scan
 
 on:
   push:
@@ -20,9 +20,10 @@ jobs:
     env:
       Solution_Name: Sonatype-SCA                         # Replace with your solution name, i.e. MyWpfApp.sln.
       SBOM_Path: SonatypeSCA
+      SonatypeCLIUrl: https://sonatype-download.global.ssl.fastly.net/repository/downloads-prod-group/scanner/nexus-iq-cli-1.175.0-01+778-windows.zip
       SonatypeUrl: 'https://finos.sonatype.app/platform/'
       SonatypeAppId: 'morphir-dotnet'
-      SonatypeStage: 'build'
+      SonatypeStage: ${{ github.job }}
       SonatypeScanTarget: "."
       ExcludeDirectory: " -D dirExcludes='**/website/, **/docs/, **/.*'"
       
@@ -56,19 +57,12 @@ jobs:
     #      echo $env:SBOM_Path
     #      dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
 
-    # - name: Set up JDK 1.8
-    #   uses: actions/setup-java@v1
-    #   with:
-    #     java-version: 1.8
-
-    # curl --location 'https://download.sonatype.com/clm/scanner/latest.jar' > Sonatype-CLI.jar
     
-    - name: Download and Run Sonatype Lifecycle CLI
+    - name: Download and Scan with Sonatype Lifecycle CLI
       run: |
          echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
-         curl --location 'https://sonatype-download.global.ssl.fastly.net/repository/downloads-prod-group/scanner/nexus-iq-cli-1.174.0-01+761-windows.zip' > Sonatype.zip
+         curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
          tar -xf Sonatype.zip
-         dir
          rm Sonatype.zip
-         dir
          .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
+
