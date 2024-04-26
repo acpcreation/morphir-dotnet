@@ -8,9 +8,7 @@ on: workflow_dispatch
 #     branches: [ "main" ]
 
 jobs:
-
   build:
-
     # strategy:
     #   matrix:
     #     configuration: [Debug] #Release
