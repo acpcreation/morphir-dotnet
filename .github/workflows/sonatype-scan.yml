@@ -66,7 +66,7 @@ jobs:
     #      .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
 
     - name: Sonatype Lifecycle Scan (SCA)
-      id: sonatype-scan
+      id: evaluate
       uses: sonatype/actions/evaluate@v1
       with:
         iq-server-url: ${{ env.SonatypeUrl }}
