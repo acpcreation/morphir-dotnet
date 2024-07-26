@@ -19,7 +19,7 @@ jobs:
     env:
       Solution_Name: Sonatype-SCA                         # Replace with your solution name, i.e. MyWpfApp.sln.
       SBOM_Path: SonatypeSCA
-      SonatypeCLIUrl: https://sonatype-download.global.ssl.fastly.net/repository/downloads-prod-group/scanner/nexus-iq-cli-1.175.0-01+778-windows.zip
+      # SonatypeCLIUrl: https://sonatype-download.global.ssl.fastly.net/repository/downloads-prod-group/scanner/nexus-iq-cli-1.175.0-01+778-windows.zip
       SonatypeUrl: 'https://finos.sonatype.app/platform/'
       SonatypeAppId: 'morphir-dotnet'
       SonatypeStage: ${{ github.job }}
@@ -57,11 +57,33 @@ jobs:
     #      dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
 
     
-    - name: Download and Scan with Sonatype Lifecycle CLI
-      run: |
-         echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
-         curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
-         tar -xf Sonatype.zip
-         rm Sonatype.zip
-         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
+    # - name: Download and Scan with Sonatype Lifecycle CLI
+    #   run: |
+    #      echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
+    #      curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
+    #      tar -xf Sonatype.zip
+    #      rm Sonatype.zip
+    #      .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
 
+    - name: Sonatype Lifecycle Scan (SCA)
+      id: sonatype-scan
+      uses: sonatype/actions/evaluate@v1
+      with:
+        iq-server-url: ${{ env.SonatypeUrl }}
+        username: ${{ secrets.sonatype_user }}
+        password: ${{ secrets.sonatype_password }}
+        application-id: ${{ env.SonatypeAppId }}
+        scan-targets: ${{ env.SonatypeScanTarget }}
+        
+    # - name: Fetch SBOM
+    #   uses: sonatype/actions/fetch-sbom@v1
+    #   if: ( success() || failure() ) && steps.evaluate.outputs.scan-id
+    #   with:
+    #     iq-server-url: https://your.lifecycle.server
+    #     username: ${{ secrets.LIFECYCLE_USERNAME }}
+    #     password: ${{ secrets.LIFECYCLE_PASSWORD }}
+    #     application-id: lifecycle-app
+    #     scan-id: ${{ steps.evaluate.outputs.scan-id }}
+    #     sbom-standard: cyclonedx
+    #     sbom-version: 1.5
+    #     artifact-name: my-sbom
