@@ -49,41 +49,40 @@ jobs:
         paket install
         .\build.cmd DotnetRestore
         
-    # - name: Create CycloneDX SBOM (transitive mapping)
-    #   run: |
-    #      dotnet tool install --global CycloneDX
-    #      dotnet restore
-    #      echo $env:SBOM_Path
-    #      dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
+    - name: Create CycloneDX SBOM (transitive mapping)
+      run: |
+         dotnet tool install --global CycloneDX
+         dotnet restore
+         echo $env:SBOM_Path
+         dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
 
     
-    # - name: Download and Scan with Sonatype Lifecycle CLI
-    #   run: |
-    #      echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
-    #      curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
-    #      tar -xf Sonatype.zip
-    #      rm Sonatype.zip
-    #      .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
+    - name: Download and Scan with Sonatype Lifecycle CLI
+      run: |
+         echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
+         curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
+         tar -xf Sonatype.zip
+         rm Sonatype.zip
+         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
 
-    - name: Sonatype Lifecycle Scan (SCA)
-      id: evaluate
-      uses: sonatype/actions/evaluate@v1
-      with:
-        iq-server-url: ${{ env.SonatypeUrl }}
-        username: ${{ secrets.sonatype_user }}
-        password: ${{ secrets.sonatype_password }}
-        application-id: ${{ env.SonatypeAppId }}
-        scan-targets: ${{ env.SonatypeScanTarget }}
         
-    # - name: Fetch SBOM
-    #   uses: sonatype/actions/fetch-sbom@v1
-    #   if: ( success() || failure() ) && steps.evaluate.outputs.scan-id
-    #   with:
-    #     iq-server-url: https://your.lifecycle.server
-    #     username: ${{ secrets.LIFECYCLE_USERNAME }}
-    #     password: ${{ secrets.LIFECYCLE_PASSWORD }}
-    #     application-id: lifecycle-app
-    #     scan-id: ${{ steps.evaluate.outputs.scan-id }}
-    #     sbom-standard: cyclonedx
-    #     sbom-version: 1.5
-    #     artifact-name: my-sbom
+    - name: Retrieve Sonatype SBOM (SPDX)
+      if: always()
+      run: |
+        mkdir reports/
+        iqCredentials=${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }}
+        echo 'Get internal app ID for public ID: '$SonatypeAppId
+        res=$(curl -u $iqCredentials --location $SonatypeUrl'api/v2/applications?publicId='$SonatypeAppId)
+        IFS='"' read -a array <<< "$res"
+        echo 'Internal app ID: '${array[5]}
+        internalID=${array[5]}
+        curl -u $iqCredentials --location $SonatypeUrl'api/v2/spdx/'$internalID'/stages/'$SonatypeStage -H 'Accept: application/xml' > reports/$SonatypeAppId.spdx.json
+        echo 'Sonatype SBOM (SPDX): '
+        cat reports/$SonatypeAppId.spdx.json
+
+    - name: Upload Sonatype SBOM (SPDX)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.SonatypeAppId }} Sonatype SBOM (SPDX) 
+        path: reports/
