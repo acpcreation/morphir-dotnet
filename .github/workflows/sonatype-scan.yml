@@ -42,34 +42,33 @@ jobs:
     # - name: Setup MSBuild.exe
     #   uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Resolve Paket Dependencies
-      run: |
-        dotnet tool install --global Paket
-        dotnet tool restore
-        paket install
-        .\build.cmd DotnetRestore
+    # - name: Resolve Paket Dependencies
+    #   run: |
+    #     dotnet tool install --global Paket
+    #     dotnet tool restore
+    #     paket install
+    #     .\build.cmd DotnetRestore
         
-    - name: Create CycloneDX SBOM (transitive mapping)
-      run: |
-         dotnet tool install --global CycloneDX
-         dotnet restore
-         echo $env:SBOM_Path
-         dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
+    # - name: Create CycloneDX SBOM (transitive mapping)
+    #   run: |
+    #      dotnet tool install --global CycloneDX
+    #      dotnet restore
+    #      echo $env:SBOM_Path
+    #      dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
 
     
-    - name: Download and Scan with Sonatype Lifecycle CLI
-      run: |
-         echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
-         curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
-         tar -xf Sonatype.zip
-         rm Sonatype.zip
-         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
+    # - name: Download and Scan with Sonatype Lifecycle CLI
+    #   run: |
+    #      echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
+    #      curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
+    #      tar -xf Sonatype.zip
+    #      rm Sonatype.zip
+    #      .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
 
         
     - name: Retrieve Sonatype SBOM (SPDX)
       if: always()
       run: |
-        @echo off
         set sonatypeUrl=${{ env.SonatypeUrl }}
         set sonatypeAppId=${{ env.SonatypeAppId }}
         set iqCredentials=${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} 
@@ -91,15 +90,6 @@ jobs:
         echo Sonatype SBOM (SPDX): 
         type %sonatypeAppId%.spdx.json
 
-        iqCredentials=${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }}
-        echo 'Get internal app ID for public ID: '$SonatypeAppId
-        res=$(curl -u $iqCredentials --location $SonatypeUrl'api/v2/applications?publicId='$SonatypeAppId)
-        IFS='"' read -a array <<< "$res"
-        echo 'Internal app ID: '${array[5]}
-        internalID=${array[5]}
-        curl -u $iqCredentials --location $SonatypeUrl'api/v2/spdx/'$internalID'/stages/'$SonatypeStage -H 'Accept: application/xml' > reports/$SonatypeAppId.spdx.json
-        echo 'Sonatype SBOM (SPDX): '
-        cat reports/$SonatypeAppId.spdx.json
 
     - name: Upload Sonatype SBOM (SPDX)
       if: always()
