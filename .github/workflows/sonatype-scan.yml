@@ -32,10 +32,10 @@ jobs:
         fetch-depth: 0
 
     # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.x.x
+    # - name: Install .NET Core
+    #   uses: actions/setup-dotnet@v3
+    #   with:
+    #     dotnet-version: 6.x.x
 
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     # - name: Setup MSBuild.exe
@@ -64,6 +64,11 @@ jobs:
     #      rm Sonatype.zip
     #      .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
 
+    - name: test
+      run: |
+        $testString = "Hello,Welcome,to,ShellGeek,Website"  
+        # Split the string to Array
+        $teststring.Split(',')
         
     - name: Retrieve Sonatype SBOM (SPDX)
       if: always()
