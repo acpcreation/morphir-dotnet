@@ -69,7 +69,28 @@ jobs:
     - name: Retrieve Sonatype SBOM (SPDX)
       if: always()
       run: |
+        @echo off
+        set sonatypeUrl=${{ env.SonatypeUrl }}
+        set sonatypeAppId=${{ env.SonatypeAppId }}
+        set iqCredentials=${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} 
+        set sonatypeStage=${{ env.SonatypeStage }}
         mkdir reports/
+        echo Get internal app ID for public ID: %sonatypeAppId%
+        curl -X GET -u %iqCredentials% --location %sonatypeUrl%api/v2/applications?publicId=%sonatypeAppId% > curl-out.txt
+        set /p res=<curl-out.txt
+        echo %res%
+        for /f "tokens=1-5 delims=:" %%a in ("%res%") do (
+            set internalID=%%c #Get the internal app ID 
+        )
+        set internalID=%internalID:","publicId=%
+        set internalID=%internalID:"=%
+        echo %internalID%
+        mkdir reports
+        curl -X GET -u %iqCredentials% --location %sonatypeUrl%api/v2/spdx/%internalID%/stages/%sonatypeStage% -H 'Accept: application/xml' > reports/%sonatypeAppId%.spdx.json
+        cd reports
+        echo Sonatype SBOM (SPDX): 
+        type %sonatypeAppId%.spdx.json
+
         iqCredentials=${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }}
         echo 'Get internal app ID for public ID: '$SonatypeAppId
         res=$(curl -u $iqCredentials --location $SonatypeUrl'api/v2/applications?publicId='$SonatypeAppId)
