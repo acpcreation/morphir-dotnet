@@ -32,72 +32,72 @@ jobs:
         fetch-depth: 0
 
     # Install the .NET Core workload
-    # - name: Install .NET Core
-    #   uses: actions/setup-dotnet@v3
-    #   with:
-    #     dotnet-version: 6.x.x
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.x.x
 
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-    # - name: Setup MSBuild.exe
-    #   uses: microsoft/setup-msbuild@v1.0.2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.2
 
-    # - name: Resolve Paket Dependencies
-    #   run: |
-    #     dotnet tool install --global Paket
-    #     dotnet tool restore
-    #     paket install
-    #     .\build.cmd DotnetRestore
+    - name: Resolve Paket Dependencies
+      run: |
+        dotnet tool install --global Paket
+        dotnet tool restore
+        paket install
+        .\build.cmd DotnetRestore
         
-    # - name: Create CycloneDX SBOM (transitive mapping)
-    #   run: |
-    #      dotnet tool install --global CycloneDX
-    #      dotnet restore
-    #      echo $env:SBOM_Path
-    #      dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
+    - name: Create CycloneDX SBOM (transitive mapping)
+      run: |
+         dotnet tool install --global CycloneDX
+         dotnet restore
+         echo $env:SBOM_Path
+         dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
 
     
-    # - name: Download and Scan with Sonatype Lifecycle CLI
+    - name: Download and Scan with Sonatype Lifecycle CLI
+      run: |
+         echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
+         curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
+         tar -xf Sonatype.zip
+         rm Sonatype.zip
+         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -r sonatype-results.json -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
+
+    # - name: test
     #   run: |
-    #      echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
-    #      curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
-    #      tar -xf Sonatype.zip
-    #      rm Sonatype.zip
-    #      .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
-
-    - name: test
-      run: |
-        $testString = "Hello,Welcome,to,ShellGeek,Website"  
-        # Split the string to Array
-        $teststring.Split(',')
+    #     $testString = "Hello,Welcome,to,ShellGeek,Website"  
+    #     # Split the string to Array
+    #     $teststring.Split(',')
         
-    - name: Retrieve Sonatype SBOM (SPDX)
-      if: always()
-      run: |
-        set sonatypeUrl=${{ env.SonatypeUrl }}
-        set sonatypeAppId=${{ env.SonatypeAppId }}
-        set iqCredentials=${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} 
-        set sonatypeStage=${{ env.SonatypeStage }}
-        mkdir reports/
-        echo Get internal app ID for public ID: %sonatypeAppId%
-        curl -X GET -u %iqCredentials% --location %sonatypeUrl%api/v2/applications?publicId=%sonatypeAppId% > curl-out.txt
-        set /p res=<curl-out.txt
-        echo %res%
-        for /f "tokens=1-5 delims=:" %%a in ("%res%") do (
-            set internalID=%%c #Get the internal app ID 
-        )
-        set internalID=%internalID:","publicId=%
-        set internalID=%internalID:"=%
-        echo %internalID%
-        mkdir reports
-        curl -X GET -u %iqCredentials% --location %sonatypeUrl%api/v2/spdx/%internalID%/stages/%sonatypeStage% -H 'Accept: application/xml' > reports/%sonatypeAppId%.spdx.json
-        cd reports
-        echo Sonatype SBOM (SPDX): 
-        type %sonatypeAppId%.spdx.json
+    # - name: Retrieve Sonatype SBOM (SPDX)
+    #   if: always()
+    #   run: |
+    #     set sonatypeUrl=${{ env.SonatypeUrl }}
+    #     set sonatypeAppId=${{ env.SonatypeAppId }}
+    #     set iqCredentials=${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} 
+    #     set sonatypeStage=${{ env.SonatypeStage }}
+    #     mkdir reports/
+    #     echo Get internal app ID for public ID: %sonatypeAppId%
+    #     curl -X GET -u %iqCredentials% --location %sonatypeUrl%api/v2/applications?publicId=%sonatypeAppId% > curl-out.txt
+    #     set /p res=<curl-out.txt
+    #     echo %res%
+    #     for /f "tokens=1-5 delims=:" %%a in ("%res%") do (
+    #         set internalID=%%c #Get the internal app ID 
+    #     )
+    #     set internalID=%internalID:","publicId=%
+    #     set internalID=%internalID:"=%
+    #     echo %internalID%
+    #     mkdir reports
+    #     curl -X GET -u %iqCredentials% --location %sonatypeUrl%api/v2/spdx/%internalID%/stages/%sonatypeStage% -H 'Accept: application/xml' > reports/%sonatypeAppId%.spdx.json
+    #     cd reports
+    #     echo Sonatype SBOM (SPDX): 
+    #     type %sonatypeAppId%.spdx.json
 
 
-    - name: Upload Sonatype SBOM (SPDX)
+    - name: Upload Sonatype Scan Results
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.SonatypeAppId }} Sonatype SBOM (SPDX) 
-        path: reports/
+        name: ${{ env.SonatypeAppId }} Sonatype Scan Results 
+        path: sonatype-results.json
