@@ -65,7 +65,7 @@ jobs:
          curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
          tar -xf Sonatype.zip
          rm Sonatype.zip
-         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -r sonatype-results.json -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
+         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.SONATYPE_USER }}:${{ secrets.SONATYPE_PASSWORD }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -r sonatype-results.json -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
 
     # - name: test
     #   run: |
