@@ -53,7 +53,10 @@ jobs:
       run: |
          dotnet tool install --global CycloneDX
          dotnet restore
-         copy ./build/build.fsproj SonatypeSCA.csproj
+         dir
+         dir build/
+         copy build/build.fsproj SonatypeSCA.csproj
+         cat SonatypeSCA.csproj
          echo $env:SBOM_Path
          dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
 
