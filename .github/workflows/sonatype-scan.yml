@@ -48,15 +48,18 @@ jobs:
         paket install
         .\build.cmd DotnetRestore
         
+        
     - name: Create CycloneDX SBOM (transitive mapping)
       run: |
          dotnet tool install --global CycloneDX
          dotnet restore
+         copy ./build/build.fsproj SonatypeSCA.csproj
          echo $env:SBOM_Path
          dotnet CycloneDX SonatypeSCA\SonatypeSCA.csproj -o SonatypeSCA\
 
     
     - name: Download and Scan with Sonatype Lifecycle CLI
+      if: always()
       run: |
          echo Sonatype-CLI.jar - https://download.sonatype.com/clm/scanner/latest.jar 
          curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
