@@ -47,7 +47,6 @@ jobs:
         paket install
         .\build.cmd DotnetRestore
         
-        
     - name: Create CycloneDX SBOM (transitive mapping)
       run: |
          dotnet tool install --global CycloneDX
@@ -56,7 +55,6 @@ jobs:
          dir
          echo $env:SBOM_Path
          dotnet CycloneDX SonatypeSCA.csproj -o packages/
-
     
     - name: Download and Scan with Sonatype Lifecycle CLI
       if: always()
@@ -65,38 +63,7 @@ jobs:
          curl --location ${{ env.SonatypeCLIUrl }} > Sonatype.zip
          tar -xf Sonatype.zip
          rm Sonatype.zip
-         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.SONATYPE_USER }}:${{ secrets.SONATYPE_PASSWORD }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -r sonatype-results.json -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
-
-    # - name: test
-    #   run: |
-    #     $testString = "Hello,Welcome,to,ShellGeek,Website"  
-    #     # Split the string to Array
-    #     $teststring.Split(',')
-        
-    # - name: Retrieve Sonatype SBOM (SPDX)
-    #   if: always()
-    #   run: |
-    #     set sonatypeUrl=${{ env.SonatypeUrl }}
-    #     set sonatypeAppId=${{ env.SonatypeAppId }}
-    #     set iqCredentials=${{ secrets.sonatype_user }}:${{ secrets.sonatype_password }} 
-    #     set sonatypeStage=${{ env.SonatypeStage }}
-    #     mkdir reports/
-    #     echo Get internal app ID for public ID: %sonatypeAppId%
-    #     curl -X GET -u %iqCredentials% --location %sonatypeUrl%api/v2/applications?publicId=%sonatypeAppId% > curl-out.txt
-    #     set /p res=<curl-out.txt
-    #     echo %res%
-    #     for /f "tokens=1-5 delims=:" %%a in ("%res%") do (
-    #         set internalID=%%c #Get the internal app ID 
-    #     )
-    #     set internalID=%internalID:","publicId=%
-    #     set internalID=%internalID:"=%
-    #     echo %internalID%
-    #     mkdir reports
-    #     curl -X GET -u %iqCredentials% --location %sonatypeUrl%api/v2/spdx/%internalID%/stages/%sonatypeStage% -H 'Accept: application/xml' > reports/%sonatypeAppId%.spdx.json
-    #     cd reports
-    #     echo Sonatype SBOM (SPDX): 
-    #     type %sonatypeAppId%.spdx.json
-
+         .\nexus-iq-cli.exe -s ${{ env.SonatypeUrl }} -a ${{ secrets.SONATYPE_SCANNER_USERNAME }}:${{ secrets.SONATYPE_SCANNER_PASSWORD }} -t ${{ env.SonatypeStage }} ${{ env.ExcludeDirectory }} -r sonatype-results.json -i ${{ env.SonatypeAppId }} ${{ env.SonatypeScanTarget }}
 
     - name: Upload Sonatype Scan Results
       if: always()
