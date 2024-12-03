@@ -1,14 +1,12 @@
 name: Sonatype Lifecycle SCA Scan
 
 on:
-  pull_request:
-  push:
-    branches: [main]
+  pull_request_target:
   workflow_dispatch:
 
 jobs:
   build:
-    if: github.repository_owner == 'finos'
+    # if: github.repository_owner == 'finos'
     # strategy:
     #   matrix:
     #     configuration: [Debug] #Release
